@@ -1,0 +1,8 @@
+{
+    "name": "ko2note",
+    "version": "0.0.1",
+    "description": "Ko2 Notebook.",
+    "main": "main.js",
+    "author": "Ko2o0",
+    "license": "MIT"
+}

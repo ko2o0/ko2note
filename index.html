@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ko2note</title>
+    <style type="text/css" media="screen">
+      body {
+	      overflow: hidden;
+	      background-color: #222;
+	      font-size: 10pt;
+	      margin: 0px;
+      }
+
+      /*スクロールバー全体*/
+      ::-webkit-scrollbar {
+	      width: 10px;
+      }
+      /*スクロールバーの軌道*/
+      ::-webkit-scrollbar-track {
+        border-radius: 10px;
+        box-shadow: inset 0 0 6px rgba(0, 0, 0, .1);
+      }
+      /*スクロールバーの動く部分*/
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 50, .5);
+        border-radius: 10px;
+        box-shadow:0 0 0 1px rgba(255, 255, 255, .3);
+      }
+
+      .container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .header {
+        /*
+        height: 1.5em;
+        background-color: orange;
+        */
+      }
+      .contents {
+        flex: 1;
+        display: flex;
+      }
+      .statusbar {
+        height: 1.5em;
+        background-color: royalblue;
+        color: white;
+      }
+      .itemlist {
+        width: 200px;
+        color: white;
+        margin: 0.7em;
+        overflow: scroll;
+      }
+      .panel {
+        flex: 1;
+        position: relative;
+        /**/
+        display: flex;
+        flex-direction: column;
+      }
+      #statusbar111 {
+        background-color: royalblue;
+        color: white;
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+      #view {
+        height: 300px;
+        background-color: white;
+        transform: scale(0.8);
+        display: none;
+        visibility: hidden;
+      }
+      #editor {
+	      margin: 0;
+        /*
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        */
+        flex: 1;
+      }
+      .ace_ko2todo {
+	      color: #5cfa00;
+      }
+      .ace_ko2done {
+        color: #9caeb7;
+        text-decoration: line-through;
+      }
+      .ace_ko2note {
+	      color: #f8be53;
+      }
+      .ace_ko2info {
+	      color: #f5e93c;
+      }
+      .ace_ko2plan {
+	      color: #c5b3f5;
+      }
+      .ace_ko2date {
+	      color: #f39700;
+      }
+      .ace_ko2deadline {
+	      color: #e60012;
+      }
+      .ace_ko2link {
+	      color: #a0d8ef;
+        text-decoration: underline;
+      }
+      .ace_ko2exec {
+	      color: #a0d8ef;
+        text-decoration: underline;
+      }
+      .ace_ko2memo {
+	      color: #d7c447;
+      }
+      .ace_ko2label {
+	      color: #d7c447;
+      }
+      .ace_ko2node {
+        background-color: #a52a2a;
+        color: white;
+      }
+      .clickable {
+        cursor: pointer;
+      }
+      .sunday {
+        background-color: rgb(255, 160, 131);
+        text-align: center;
+        font-size: 10pt;
+        color: black;
+      }
+      .saturday {
+        background-color: rgb(124, 181, 255);
+        text-align: center;
+        font-size: 10pt;
+        color: black;
+      }
+      .title {
+        background-color: rgb(124, 255, 168);
+        text-align: center;
+        font-size: 10pt;
+        color: black;
+      }
+      .day {
+        font-size: 10pt;
+        text-align: right;
+        color: white;
+      }
+      #calendar {
+        display: none;
+        visibility: hidden;
+      }
+      .calendar_panel {
+        display: flex;
+        padding-top: 10px;
+        padding-bottom: 5px;
+      }
+      .larrow {
+        display: inline-block;
+        width: 0px;
+        height: 0px;
+        border-top: 8px solid transparent;
+        border-right: 8px solid skyblue;
+        border-left: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+      }
+      .rarrow {
+        display: inline-block;
+        width: 0px;
+        height: 0px;
+        border-top: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-left: 8px solid skyblue;
+        border-bottom: 8px solid transparent;
+      }
+      .box {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-left: 15px;
+        margin-right: 15px;
+        background: skyblue;
+        border-radius: 8px;
+      }
+      .close {
+        margin-left: 5px;
+        margin-right: 20px;
+        color: red;
+        font-size: 10pt;
+        border: 2px solid red;
+        width: 18px;
+        height: 18px;
+        text-align: center;
+        vertical-align: middle;
+      }
+      .overlay {
+        z-index: 20;
+        opacity: 0.7;
+        background-color: white;
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        width: 640px;
+        height: 480px;
+        display: none;
+        visibility: hidden;
+      }
+    </style>
+    <script src="editor.js"></script>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="header">
+      </div>
+      <div class="contents">
+	      <div class="itemlist" id="itemlist">
+	      </div>
+	      <div class="panel">
+          <iframe id="view" is="x-frame-bypass"></iframe>
+	        <div id="editor"></div>
+	      </div>
+      </div>
+      <div class="statusbar" id="statusbar">
+      </div>
+    </div>
+
+    <!-- calendar: -->
+    <div class=calendar id=calendar>
+      <div class="calendar_panel">
+        <div class="close clickable" id=calendar_close>X</div>
+        <div class="larrow clickable" id=calendar_prev></div>
+        <div class="box clickable" id=calendar_today></div>
+        <div class="rarrow clickable" id=calendar_next></div>
+      </div>
+      <div id="calendar_title"></div>
+      <div>
+        <table>
+          <tr>
+            <td class="sunday">日</td>
+            <td class="title">月</td>
+            <td class="title">火</td>
+            <td class="title">水</td>
+            <td class="title">木</td>
+            <td class="title">金</td>
+            <td class="saturday">土</td>
+          </tr>
+          <tr>
+            <td class="sunday" id=d0>0</td>
+            <td class="day" id=d1>1</td>
+            <td class="day" id=d2>2</td>
+            <td class="day" id=d3>3</td>
+            <td class="day" id=d4>4</td>
+            <td class="day" id=d5>5</td>
+            <td class="saturday" id=d6>6</td>
+          </tr>
+          <tr>
+            <td class="sunday" id=d7>7</td>
+            <td class="day" id=d8>8</td>
+            <td class="day" id=d9>9</td>
+            <td class="day" id=d10>10</td>
+            <td class="day" id=d11>11</td>
+            <td class="day" id=d12>12</td>
+            <td class="saturday" id=d13>13</td>
+          </tr>
+          <tr>
+            <td class="sunday" id=d14>14</td>
+            <td class="day" id=d15>15</td>
+            <td class="day" id=d16>16</td>
+            <td class="day" id=d17>17</td>
+            <td class="day" id=d18>18</td>
+            <td class="day" id=d19>19</td>
+            <td class="saturday" id=d20>20</td>
+          </tr>
+          <tr>
+            <td class="sunday" id=d21>21</td>
+            <td class="day" id=d22>22</td>
+            <td class="day" id=d23>23</td>
+            <td class="day" id=d24>24</td>
+            <td class="day" id=d25>25</td>
+            <td class="day" id=d26>26</td>
+            <td class="saturday" id=d27>27</td>
+          </tr>
+          <tr>
+            <td class="sunday" id=d28>28</td>
+            <td class="day" id=d29>29</td>
+            <td class="day" id=d30>30</td>
+            <td class="day" id=d31>31</td>
+            <td class="day" id=d32>32</td>
+            <td class="day" id=d33>33</td>
+            <td class="saturday" id=d34>34</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- -->
+    <div class="overlay" id="overlay">
+    </div>
+    <!-- -->
+
+    <script src="lib/ace/build/src/ace.js" type="text/javascript" charset="utf-8"></script>
+    
+  </body>
+</html>
